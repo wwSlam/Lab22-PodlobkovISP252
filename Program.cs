@@ -1,138 +1,106 @@
 ﻿using System.Collections.Generic;
-Dictionary<string, int> frequencies = new Dictionary<string, int>();
 
-frequencies.Add("код", 2);
-frequencies.Add("тест", 1);
-frequencies["код"] = 3;
-frequencies["план"] = 1;
+Console.WriteLine(">>> Анализ слов <<<");
+Console.WriteLine();
 
-System.Console.WriteLine(frequencies.Count);
-System.Console.WriteLine(frequencies["код"]);
+HashSet<string> excludedWords = new HashSet<string> { "и", "в", "на" };
 
-// Dictionary<string, int> repeated = new Dictionary<string, int>();
-// repeated.Add["код", 1];
-// repeated.Add["код", 2];
-
-
-Dictionary<string, int> lookup = new Dictionary<string, int>
-{
-    {"код", 2},
-     {"тест", 1}
-};
-
-System.Console.WriteLine(lookup.ContainsKey("код"));
-System.Console.WriteLine(lookup.ContainsKey("план"));
-
-if (lookup.TryGetValue("код", out int count))
-{
-    System.Console.WriteLine($"Найдено: {count}");
-}
+Console.Write("Слово для добавления в исключения: ");
+string addWord = Console.ReadLine()!.Trim().ToLowerInvariant();
+if (excludedWords.Add(addWord))
+    Console.WriteLine("Исключение добавлено");
 else
+    Console.WriteLine("Такое исключение уже есть");
+
+Console.Write("Слово для удаления из исключений: ");
+string removeWord = Console.ReadLine()!.Trim().ToLowerInvariant();
+if (excludedWords.Remove(removeWord))
+    Console.WriteLine("Исключение удалено");
+else
+    Console.WriteLine("Такого исключения нет");
+Console.WriteLine($"Количество исключений: {excludedWords.Count}");
+
+Console.Write("Введите текст: ");
+string text = Console.ReadLine() ?? "";
+
+string[] words = text.ToLowerInvariant()
+    .Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+Dictionary<string, int> frequencies = new Dictionary<string, int>();
+foreach (string word in words)
 {
-    System.Console.WriteLine("Слово не найдено");
+    if (excludedWords.Contains(word))
+        continue;
+    AddWord(frequencies, word);
+}
+
+int total = words.Length;
+int accounted = SumFrequencies(frequencies);
+int skipped = total - accounted;
+
+Console.WriteLine();
+Console.WriteLine($"Исходная строка: [{text}]");
+Console.WriteLine($"Всего слов: {total}");
+Console.WriteLine($"Пропущено слов: {skipped}");
+Console.WriteLine($"Учтено слов: {accounted}");
+Console.WriteLine($"Разных учтённых слов: {frequencies.Count}");
+Console.WriteLine();
+Console.WriteLine("Частоты слов:");
+PrintFrequencies(frequencies);
+
+Console.Write("Слово для поиска: ");
+string searchWord = Console.ReadLine()!.Trim().ToLowerInvariant();
+if (frequencies.TryGetValue(searchWord, out int found))
+    Console.WriteLine($"Количество вхождений: {found}");
+else
+    Console.WriteLine("Слово не найдено");
+
+
+void AddWord(Dictionary<string, int> frequencies, string word)
+{
+    if (frequencies.TryGetValue(word, out int count))
+        frequencies[word] = count + 1;
+    else
+        frequencies.Add(word, 1);
+}
+
+int SumFrequencies(Dictionary<string, int> frequencies)
+{
+    int sum = 0;
+    foreach (KeyValuePair<string, int> entry in frequencies)
+        sum += entry.Value;
+    return sum;
 }
 
 void PrintFrequencies(Dictionary<string, int> frequencies)
 {
     if (frequencies.Count == 0)
     {
-        System.Console.WriteLine("Нет слов для анализа");
+        Console.WriteLine("Нет слов для анализа");
         return;
     }
 
     foreach (KeyValuePair<string, int> entry in frequencies)
-    {
-        System.Console.WriteLine($"{entry.Key}: {entry.Value}");
-    }
+        Console.WriteLine($"{entry.Key}: {entry.Value}");
 }
 
-PrintFrequencies(lookup);
-
-Console.WriteLine(lookup.Remove("тест"));
-Console.WriteLine(lookup.Remove("план"));
-Console.WriteLine(lookup.Count);
-
-lookup.Clear();
-Console.WriteLine(lookup.Count);
-
-
-Dictionary<string, int> checkedWords = new Dictionary<string, int>
+int CountFrequentWords(Dictionary<string, int> frequencies, int limit)
 {
-    { "код", 2 }
-};
-
-if (checkedWords.TryGetValue("план", out int count1))
-{
-    Console.WriteLine($"Найдено: {count1}");
-}
-else
-{
-    Console.WriteLine("Слово не найдено");
-}
-
-if (checkedWords.TryGetValue("код", out int count2))
-{
-    Console.WriteLine($"Найдено: {count2}");
-}
-else
-{
-    Console.WriteLine("Слово не найдено");
-}
-
-
-HashSet<string> uniqueWords = new HashSet<string>();
-
-Console.WriteLine(uniqueWords.Add("код"));
-Console.WriteLine(uniqueWords.Add("тест"));
-Console.WriteLine(uniqueWords.Add("код"));
-Console.WriteLine(uniqueWords.Count);
-
-
-Console.WriteLine(uniqueWords.Contains("код"));
-Console.WriteLine(uniqueWords.Contains("план"));
-Console.WriteLine(uniqueWords.Remove("тест"));
-Console.WriteLine(uniqueWords.Remove("план"));
-Console.WriteLine(uniqueWords.Count);
-
-uniqueWords.Clear();
-Console.WriteLine(uniqueWords.Count);
-
-foreach (string word in uniqueWords)
-{
-    Console.WriteLine(word);
-}
-
-
-void AddWord(Dictionary<string, int> frequencies, string word)
-{
-    if (frequencies.TryGetValue(word, out int count))
-    {
-        frequencies[word] = count + 1;
-    }
-    else
-    {
-        frequencies.Add(word, 1);
-    }
-}
-
-
-Dictionary<string, int> testFrequencies = new Dictionary<string, int>();
-
-AddWord(testFrequencies, "код");
-AddWord(testFrequencies, "тест");
-AddWord(testFrequencies, "код");
-
-PrintFrequencies(testFrequencies);
-Console.WriteLine(testFrequencies.Count);
-
-
-int SumFrequencies(Dictionary<string, int> frequencies)
-{
-    int sum = 0;
+    int count = 0;
     foreach (KeyValuePair<string, int> entry in frequencies)
     {
-        sum += entry.Value;
+        if (entry.Value >= limit)
+            count++;
     }
-    
-    return sum;
+    return count;
 }
+
+System.Console.WriteLine();
+System.Console.WriteLine("вариант 1");
+
+Console.Write("Введите limit (1–100): ");
+int limit = int.Parse(Console.ReadLine()!);
+
+int frequentCount = CountFrequentWords(frequencies, limit);
+Console.WriteLine($"Слов с частотой не меньше {limit}: {frequentCount}");
+
